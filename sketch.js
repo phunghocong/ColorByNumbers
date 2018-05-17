@@ -70,6 +70,7 @@ function draw() {
 
 function mousePressed() {
   switchColor();
+  return false;
 }
 
 function switchColor() {
