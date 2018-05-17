@@ -1,45 +1,38 @@
 let CELLSIZE = 90;
-let COLS = 10;
-let ROWS = 10;
 
-let picture = [];
-let drawn = [];
+let image;
+let openCells = [];
+let drawnCells = [];
 let choice = []
 let curChoice;
 
 let count = 0;
 let isDrawn = false;
-let DRAWNBUTTON;
+
+function preload() {
+  image = loadImage("assets/example.png")
+}
 
 function setup() {
 
-  createCanvas(COLS * CELLSIZE + 1, ROWS * CELLSIZE + 100);
+  choice = populateColors(image);
+  openCells = populateCells(image);
 
-  //Create CellColors
-  let cColors = [];
-  for (let i = 0; i < COLS; i++) {
-    choice.push(new CellColor(color(random(255), random(255), random(255)), i + 1, i, 1));
+  createCanvas(image.width * CELLSIZE + 1, image.height * CELLSIZE + 100);
+
+  //Draw Cells
+  for (let c of openCells) {
+    c.draw(CELLSIZE);
   }
-
-  //Fill "picture" and 
-  for (let i = 0; i < COLS; i++) {
-    //picture[i] = [];
-    for (let j = 0; j < ROWS; j++) {
-      let newCell = new Cell(i, j, choice[floor(random(choice.length))]);
-      newCell.draw(CELLSIZE);
-      picture.push(newCell);
-    }
-  }
-
-
   //Draw Control Panel on bottom
   for (let c of choice) {
-    c.draw(CELLSIZE, 0, CELLSIZE * (ROWS - 1) + 10);
+    c.draw(CELLSIZE, 0, CELLSIZE * (image.height - 1) + 10);
   }
-
   //Preset choice
-  choice[0].highlight(CELLSIZE, 0, CELLSIZE * (ROWS - 1) + 10);
+  choice[0].highlight(CELLSIZE, 0, CELLSIZE * (image.height - 1) + 10);
   curChoice = choice[0];
+
+  frameRate(60);
 }
 
 function draw() {
@@ -54,16 +47,16 @@ function draw() {
       count = 0;
       fill(255);
       rect(0, 0, width, height);
+      background(150);
       frameRate(5);
     }
   }
   else {
-    drawn[count].draw(CELLSIZE);
+    drawnCells[count].draw(CELLSIZE);
     count++;
-    if (count == drawn.length) {
+    if (count == drawnCells.length) {
+      background(150);
       count = 0;
-      fill(255);
-      rect(0, 0, width, height);
     }
   }
 }
@@ -74,22 +67,20 @@ function mousePressed() {
 }
 
 function switchColor() {
-  let oldChoice = curChoice;
-  if (mouseY > ROWS * (CELLSIZE - 1) + 10 && mouseY < ROWS * (CELLSIZE - 1) + 10 + CELLSIZE) {
-    //New Color Picker
 
+  let lastChoice = curChoice;
+  if (mouseY > image.height * (CELLSIZE - 1) + 10 && mouseY < image.height * (CELLSIZE - 1) + 10 + CELLSIZE) {
+    //New Color Picker
     curChoice = choice[floor(mouseX / CELLSIZE)];
 
     for (let c of choice) {
-      c.draw(CELLSIZE, 0, CELLSIZE * (ROWS - 1) + 10);
+      c.draw(CELLSIZE, 0, CELLSIZE * (image.height - 1) + 10);
     }
-    curChoice.highlight(CELLSIZE, 0, CELLSIZE * (ROWS - 1) + 10);
-
+    curChoice.highlight(CELLSIZE, 0, CELLSIZE * (image.height - 1) + 10);
   }
 
-  if (curChoice != oldChoice) {
-    for (let cell of picture) {
-      //console.log(cell.CellColor === curChoice);
+  if (curChoice != lastChoice) {
+    for (let cell of openCells) {
       if (cell.cellColor === curChoice) {
         cell.highlight(CELLSIZE);
       }
@@ -97,36 +88,38 @@ function switchColor() {
         cell.draw(CELLSIZE);
       }
     }
-
-    for(let cell of drawn){
+    for (let cell of drawnCells) {
       cell.draw(CELLSIZE);
     }
   }
 }
 
 function fillOut() {
-  if (mouseY > ROWS * CELLSIZE - 1) {
+
+  //Check if Mouse is NOT in Image Area or OUT of X Axis of Canvas 
+  if (mouseY > image.height * CELLSIZE - 1) {
     return;
   }
-
-  if (mouseX < 0 || mouseX > COLS * CELLSIZE - 1) {
+  if (mouseX < 0 || mouseX > image.width * CELLSIZE - 1) {
     return;
   }
 
   let x = floor(mouseX / CELLSIZE);
   let y = floor(mouseY / CELLSIZE);
-  let cellIndex = picture.indexOf(picture.find(o => o.x == x && o.y == y));
+  let cellIndex = openCells.indexOf(openCells.find(o => o.x == x && o.y == y));
 
-  let cell = picture[cellIndex];
+  let cell = openCells[cellIndex];
 
+  //If no Cell has been chosen, exit fillOut
   if (!cell) { return; }
+
 
   if (!cell.filled) {
     if (cell.cellColor === curChoice) {
       cell.filled = true;
       cell.count = count++;
       cell.draw(CELLSIZE);
-      drawn.push(picture.splice(cellIndex, 1)[0]);
+      drawnCells.push(openCells.splice(cellIndex, 1)[0]);
     }
     else {
       cell.currentColor = curChoice.color;
@@ -136,8 +129,8 @@ function fillOut() {
 }
 
 function checkFinished() {
-  if (picture.length == 0) {
-    drawn.sort(function (a, b) {
+  if (openCells.length == 0) {
+    drawnCells.sort(function (a, b) {
       if (a.count > b.count) {
         return 1;
       }
@@ -147,6 +140,56 @@ function checkFinished() {
     });
     return true;
   }
-
   return false;
+}
+
+function populateColors(tmpImage) {
+  let cellColors = [];
+  let count = 0;
+
+  tmpImage.loadPixels();
+
+  for (let i = 0; i < tmpImage.pixels.length; i += 4) {
+    let r = tmpImage.pixels[i];
+    let g = tmpImage.pixels[i + 1];
+    let b = tmpImage.pixels[i + 2];
+    let alpha = tmpImage.pixels[i + 3];
+
+    let pixelColor = color(r, g, b, alpha);
+    //console.log(_color);
+    if (!cellColors.find(o => o.color.toString() == pixelColor.toString())) {
+      cellColors.push(new CellColor(pixelColor, count + 1, count, 1));
+      count++;
+    }
+  }
+
+  return cellColors;
+}
+
+function populateCells(tmpImage) {
+  let tmpCells = [];
+
+  let x = 0;
+  let y = 0;
+
+  for (let i = 0; i < tmpImage.pixels.length; i += 4) {
+    let r = tmpImage.pixels[i];
+    let g = tmpImage.pixels[i + 1];
+    let b = tmpImage.pixels[i + 2];
+    let alpha = tmpImage.pixels[i + 3];
+
+    let pixelColor = color(r, g, b, alpha);
+    let colorIndex = choice.indexOf(choice.find(o => o.color.toString() === pixelColor.toString()));
+
+    tmpCells.push(new Cell(x, y, choice[colorIndex]));
+
+    x++;
+
+    if (x == image.width) {
+      x = 0;
+      y++;
+    }
+  }
+
+  return tmpCells;
 }
