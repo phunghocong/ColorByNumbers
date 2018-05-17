@@ -4,6 +4,7 @@ class Cell {
         this.x = x;
         this.y = y;
         this.cellColor = cellColor;
+        this.currentColor = undefined;
 
         this.filled = false;
         this.count = 0;
@@ -18,7 +19,12 @@ class Cell {
         }
         else {
             stroke(0);
-            fill(150);
+            if (this.currentColor) {
+                fill(this.currentColor);
+            }
+            else {
+                fill(150);
+            }
             rect(this.x * size, this.y * size, size, size);
             fill(0);
             textAlign(CENTER, CENTER);
