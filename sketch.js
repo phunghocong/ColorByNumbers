@@ -1,6 +1,6 @@
-let CELLSIZE = 50;
-let COLS = 6;
-let ROWS = 6;
+let CELLSIZE = 90;
+let COLS = 10;
+let ROWS = 10;
 
 let picture = [];
 let drawn = [];
@@ -17,7 +17,7 @@ function setup() {
 
   //Create CellColors
   let cColors = [];
-  for (let i = 0; i < COLS - 1; i++) {
+  for (let i = 0; i < COLS; i++) {
     choice.push(new CellColor(color(random(255), random(255), random(255)), i + 1, i, 1));
   }
 
