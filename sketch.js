@@ -20,8 +20,11 @@ function setup() {
 
   let rows = sheet.width / 16;
   let cols = sheet.height / 16;
-  let col = floor(random(0, cols + 1));
-  let row = floor(random(0, rows + 1));
+  let col = floor(random(0, cols));
+  let row = floor(random(0, rows));
+
+  console.log(col);
+  console.log(row);
 
   image = sheet.get(col * 16, row * 16, 16, 16);
 
