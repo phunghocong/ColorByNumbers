@@ -1,5 +1,6 @@
 let CELLSIZE = 90;
 
+let sheet;
 let image;
 let openCells = [];
 let drawnCells = [];
@@ -10,10 +11,19 @@ let count = 0;
 let isDrawn = false;
 
 function preload() {
-  image = loadImage("assets/example.png")
+  sheet = loadImage("assets/sheet.png")
 }
 
 function setup() {
+
+  console.log(sheet);
+
+  let rows = sheet.width / 16;
+  let cols = sheet.height / 16;
+  let col = floor(random(0, cols + 1));
+  let row = floor(random(0, rows + 1));
+
+  image = sheet.get(col * 16, row * 16, 16, 16);
 
   choice = populateColors(image);
   openCells = populateCells(image);
@@ -48,7 +58,7 @@ function draw() {
       fill(255);
       rect(0, 0, width, height);
       background(150);
-      frameRate(5);
+      frameRate(30);
     }
   }
   else {
