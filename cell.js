@@ -13,7 +13,7 @@ class Cell {
     draw(size) {
 
         if (this.filled) {
-            noStroke();
+            stroke(this.cellColor.color);
             fill(this.cellColor.color);
             rect(this.x * size, this.y * size, size, size);
         }
@@ -52,26 +52,8 @@ class Cell {
 }
 
 class CellColor {
-    constructor(color, text, x, y) {
+    constructor(color, text) {
         this.color = color;
         this.text = text;
-        this.x = x;
-        this.y = y;
-    }
-
-    draw(cellSize, xOffset, yOffset) {
-        fill(this.color);
-        ellipseMode(CORNER);
-        ellipse(this.x * cellSize + xOffset, this.y * cellSize + yOffset, cellSize);
-        fill(0);
-        text(this.text, this.x * cellSize + xOffset, this.y * CELLSIZE + yOffset, cellSize, cellSize);
-    }
-
-    highlight(cellSize, xOffset, yOffset) {
-        fill(this.color);
-        ellipseMode(CORNER);
-        ellipse(this.x * cellSize + xOffset, this.y * cellSize + yOffset, cellSize);
-        fill(255);
-        text(this.text, this.x * cellSize + xOffset, this.y * CELLSIZE + yOffset, cellSize, cellSize);
     }
 }

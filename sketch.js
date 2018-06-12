@@ -1,13 +1,19 @@
-let CELLSIZE = 90;
+const SPRITESIZE = 16;
+
+let CELLSIZE = 0;
 
 let sheet;
-let image;
+let img;
+
 let openCells = [];
 let drawnCells = [];
-let choice = []
-let curChoice;
 
-let count = 0;
+let colors = []
+let color_;
+
+let tools;
+
+let drawnTile = 0;
 let isDrawn = false;
 
 function preload() {
@@ -16,34 +22,25 @@ function preload() {
 
 function setup() {
 
-  console.log(sheet);
-
-  let rows = sheet.width / 16;
-  let cols = sheet.height / 16;
+  let rows = sheet.width / SPRITESIZE;
+  let cols = sheet.height / SPRITESIZE;
   let col = floor(random(0, cols));
   let row = floor(random(0, rows));
 
-  console.log(col);
-  console.log(row);
+  img = sheet.get(col * SPRITESIZE, row * SPRITESIZE, SPRITESIZE, SPRITESIZE);
 
-  image = sheet.get(col * 16, row * 16, 16, 16);
+  pre_populate(img);
 
-  choice = populateColors(image);
-  openCells = populateCells(image);
+  tools = new ToolBox(30);
+  createToolbox();
 
-  createCanvas(image.width * CELLSIZE + 1, image.height * CELLSIZE + 100);
+  createCanvas(windowWidth - 5, windowHeight - 5);
+  CELLSIZE = min(width - 1, height - 1) / SPRITESIZE;
 
   //Draw Cells
-  for (let c of openCells) {
-    c.draw(CELLSIZE);
-  }
-  //Draw Control Panel on bottom
-  for (let c of choice) {
-    c.draw(CELLSIZE, 0, CELLSIZE * (image.height - 1) + 10);
-  }
-  //Preset choice
-  choice[0].highlight(CELLSIZE, 0, CELLSIZE * (image.height - 1) + 10);
-  curChoice = choice[0];
+  drawGame();
+
+  color_ = colors[0];
 
   frameRate(60);
 }
@@ -51,13 +48,14 @@ function setup() {
 function draw() {
 
   if (!isDrawn) {
+
     if (mouseIsPressed) {
       fillOut();
     }
 
     if (checkFinished()) {
       isDrawn = true;
-      count = 0;
+      drawnTile = 0;
       fill(255);
       rect(0, 0, width, height);
       background(150);
@@ -65,55 +63,29 @@ function draw() {
     }
   }
   else {
-    drawnCells[count].draw(CELLSIZE);
-    count++;
-    if (count == drawnCells.length) {
-      background(150);
-      count = 0;
-    }
+    drawAuto();
   }
 }
 
 function mousePressed() {
-  switchColor();
-  return false;
+  let gameArea = min(height, width);
+
+  if (mouseY > gameArea || mouseX > gameArea) {
+    //Do not draw
+    tools.findAndExecute(mouseX, mouseY);
+  }
 }
 
-function switchColor() {
-
-  let lastChoice = curChoice;
-  if (mouseY > image.height * (CELLSIZE - 1) + 10 && mouseY < image.height * (CELLSIZE - 1) + 10 + CELLSIZE) {
-    //New Color Picker
-    curChoice = choice[floor(mouseX / CELLSIZE)];
-
-    for (let c of choice) {
-      c.draw(CELLSIZE, 0, CELLSIZE * (image.height - 1) + 10);
-    }
-    curChoice.highlight(CELLSIZE, 0, CELLSIZE * (image.height - 1) + 10);
-  }
-
-  if (curChoice != lastChoice) {
-    for (let cell of openCells) {
-      if (cell.cellColor === curChoice) {
-        cell.highlight(CELLSIZE);
-      }
-      else {
-        cell.draw(CELLSIZE);
-      }
-    }
-    for (let cell of drawnCells) {
-      cell.draw(CELLSIZE);
-    }
-  }
+function switchColor(newColor) {
+  color_ = newColor;
+  drawGame();
 }
 
 function fillOut() {
 
-  //Check if Mouse is NOT in Image Area or OUT of X Axis of Canvas 
-  if (mouseY > image.height * CELLSIZE - 1) {
-    return;
-  }
-  if (mouseX < 0 || mouseX > image.width * CELLSIZE - 1) {
+  let gameArea = min(height, width);
+  //Check if Mouse is NOT in img Area or OUT of X Axis of Canvas 
+  if (mouseY > gameArea || mouseX > gameArea) {
     return;
   }
 
@@ -128,14 +100,14 @@ function fillOut() {
 
 
   if (!cell.filled) {
-    if (cell.cellColor === curChoice) {
+    if (cell.cellColor === color_) {
       cell.filled = true;
-      cell.count = count++;
+      cell.drawnTile = drawnTile++;
       cell.draw(CELLSIZE);
       drawnCells.push(openCells.splice(cellIndex, 1)[0]);
     }
     else {
-      cell.currentColor = curChoice.color;
+      cell.currentColor = color_.color;
       cell.draw(CELLSIZE);
     }
   }
@@ -144,7 +116,7 @@ function fillOut() {
 function checkFinished() {
   if (openCells.length == 0) {
     drawnCells.sort(function (a, b) {
-      if (a.count > b.count) {
+      if (a.drawnTile > b.drawnTile) {
         return 1;
       }
       else {
@@ -156,9 +128,101 @@ function checkFinished() {
   return false;
 }
 
-function populateColors(tmpImage) {
-  let cellColors = [];
+function createToolbox() {
+
+  let tG = new ToolGroup("tools");
+
+  //---------
+  let black = createGraphics(tools.iconSize, tools.iconSize);
+  black.fill(0);
+  black.rect(0, 0, tools.iconSize - 2, tools.iconSize - 2);
+
+  //---------
+
+  tG.addTools(new Tool(black, function () {
+    if (CELLSIZE < min(height, width)) {
+      background(255);
+      CELLSIZE++;
+      drawGame();
+    }
+  }));
+
+  tG.addTools(new Tool(black, function () {
+    if (CELLSIZE > 1) {
+      background(255);
+      CELLSIZE--;
+      drawGame();
+    }
+  }));
+
+
+  let cS = new ToolGroup("colors");
+
+  for (let c of colors) {
+    let graph = createGraphics(tools.iconSize, tools.iconSize);
+    graph.fill(c.color);
+    graph.strokeWeight(1);
+    graph.ellipseMode(CORNERS);
+    graph.ellipse(0, 0, tools.iconSize / 2);
+
+    graph.strokeWeight(3);
+    graph.fill(255);
+    graph.stroke(0);
+    graph.textAlign(CENTER, CENTER);
+    graph.textSize(tools.iconSize / 3);
+    graph.text(c.text, tools.iconSize / 4, tools.iconSize / 4);
+    cS.addTools(new Tool(graph, switchColor, c));
+  }
+
+  tools.addGroup(tG);
+  tools.addGroup(cS);
+}
+
+function drawGame() {
+
+  let gameArea = min(height, width);
+
+  for (let c of openCells) {
+    if (c.cellColor === color_ && !c.filled) {
+      c.highlight(CELLSIZE);
+    }
+    else {
+      c.draw(CELLSIZE);
+    }
+  }
+
+  for (let c of drawnCells) {
+    c.draw(CELLSIZE);
+  }
+
+  let horiz = height > width;
+
+  fill(255);
+  rect(0, gameArea, width, height);
+  rect(gameArea, 0, width, height);
+
+  tools.draw(
+    horiz ? 0 : gameArea,
+    horiz ? gameArea : 0,
+    horiz);
+}
+
+function drawAuto() {
+  drawnCells[drawnTile].draw(CELLSIZE);
+  drawnTile++;
+  if (drawnTile == drawnCells.length) {
+    background(150);
+    drawnTile = 0;
+  }
+}
+
+function pre_populate(tmpImage) {
+  let tmpCellColors = [];
+  let tmpCells = [];
+
   let count = 0;
+  let x = 0;
+  let y = 0;
 
   tmpImage.loadPixels();
 
@@ -169,17 +233,32 @@ function populateColors(tmpImage) {
     let alpha = tmpImage.pixels[i + 3];
 
     let pixelColor = color(r, g, b, alpha);
-    //console.log(_color);
-    if (!cellColors.find(o => o.color.toString() == pixelColor.toString())) {
-      cellColors.push(new CellColor(pixelColor, count + 1, count, 1));
-      count++;
+    let colorIndex = tmpCellColors.indexOf(tmpCellColors.find(
+      c => c.color.toString() == pixelColor.toString())
+    );
+
+    if (colorIndex == -1) {
+      tmpCellColors.push(new CellColor(pixelColor, count+=1));
+      tmpCells.push(new Cell(x, y, tmpCellColors[tmpCellColors.length - 1]));
+    }
+    else {
+      tmpCells.push(new Cell(x, y, tmpCellColors[colorIndex]));
+    }
+
+    x++;
+    if (x == tmpImage.width) {
+      x = 0;
+      y++;
     }
   }
 
-  return cellColors;
-}
+  colors = tmpCellColors;
+  openCells = tmpCells;
 
-function populateCells(tmpImage) {
+  //return cellColors;
+}
+/* 
+function pre_populateCells(tmpImage) {
   let tmpCells = [];
 
   let x = 0;
@@ -192,17 +271,17 @@ function populateCells(tmpImage) {
     let alpha = tmpImage.pixels[i + 3];
 
     let pixelColor = color(r, g, b, alpha);
-    let colorIndex = choice.indexOf(choice.find(o => o.color.toString() === pixelColor.toString()));
+    let colorIndex = colors.indexOf(colors.find(o => o.color.toString() === pixelColor.toString()));
 
-    tmpCells.push(new Cell(x, y, choice[colorIndex]));
+    tmpCells.push(new Cell(x, y, colors[colorIndex]));
 
     x++;
 
-    if (x == image.width) {
+    if (x == img.width) {
       x = 0;
       y++;
     }
   }
 
   return tmpCells;
-}
+} */
