@@ -38,11 +38,16 @@ class ToolGroup {
 
     draw(x, y, isVertical, iconSize) {
 
+        fill(255);
+        noStroke();
+        
         if (isVertical) {
             x -= this.offSet;
+            rect(0, y, width, iconSize);
         }
         else {
             y -= this.offSet;
+            rect(x, 0, iconSize, height);
         }
 
         for (let t of this.tools) {

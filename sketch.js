@@ -1,20 +1,11 @@
 const SPRITESIZE = 16;
-
-let CELLSIZE = 0;
-
 let sheet;
 let img;
 
-let openCells = [];
-let drawnCells = [];
-
 let colors = []
-let color_;
 
 let tools;
-
-let drawnTile = 0;
-let isDrawn = false;
+let game;
 
 function preload() {
   sheet = loadImage("assets/sheet.png")
@@ -27,43 +18,47 @@ function setup() {
   let col = floor(random(0, cols));
   let row = floor(random(0, rows));
 
+  //Get Random image from SpriteSheet
   img = sheet.get(col * SPRITESIZE, row * SPRITESIZE, SPRITESIZE, SPRITESIZE);
 
-  pre_populate(img);
+  //Create the Canvas
+  createCanvas(windowWidth - 5, windowHeight - 5);
 
+  //Initate game and tools
+  game = new Game(pre_populate(img), img.height, img.width);
   tools = new ToolBox(30);
   createToolbox();
 
-  createCanvas(windowWidth - 5, windowHeight - 5);
-  CELLSIZE = min(width - 1, height - 1) / SPRITESIZE;
-
-  //Draw Cells
-  drawGame();
-
-  color_ = colors[0];
+  //Draw the game
+  drawIt(true, true);
 
   frameRate(60);
 }
 
-function draw() {
+function drawIt(drawG, drawT) {
+  let gameArea = min(width, height);
+  let horiz = height > width;
 
-  if (!isDrawn) {
+  if (drawG) {
+    game.draw(gameArea);
+  }
 
-    if (mouseIsPressed) {
-      fillOut();
-    }
+  if (drawT) {
+    tools.draw(horiz ? 0 : gameArea,
+      horiz ? gameArea : 0,
+      horiz);
+  }
+}
 
-    if (checkFinished()) {
-      isDrawn = true;
-      drawnTile = 0;
-      fill(255);
-      rect(0, 0, width, height);
-      background(150);
-      frameRate(30);
-    }
+function mouseDragged() {
+
+  let gameArea = min(height, width);
+  if (mouseY > gameArea || mouseX > gameArea) {
+    //Do not draw
+    return;
   }
   else {
-    drawAuto();
+    game.action(mouseX, mouseY, "drawCell");
   }
 }
 
@@ -74,58 +69,9 @@ function mousePressed() {
     //Do not draw
     tools.findAndExecute(mouseX, mouseY);
   }
-}
-
-function switchColor(newColor) {
-  color_ = newColor;
-  drawGame();
-}
-
-function fillOut() {
-
-  let gameArea = min(height, width);
-  //Check if Mouse is NOT in img Area or OUT of X Axis of Canvas 
-  if (mouseY > gameArea || mouseX > gameArea) {
-    return;
+  else {
+    mouseDragged();
   }
-
-  let x = floor(mouseX / CELLSIZE);
-  let y = floor(mouseY / CELLSIZE);
-  let cellIndex = openCells.indexOf(openCells.find(o => o.x == x && o.y == y));
-
-  let cell = openCells[cellIndex];
-
-  //If no Cell has been chosen, exit fillOut
-  if (!cell) { return; }
-
-
-  if (!cell.filled) {
-    if (cell.cellColor === color_) {
-      cell.filled = true;
-      cell.drawnTile = drawnTile++;
-      cell.draw(CELLSIZE);
-      drawnCells.push(openCells.splice(cellIndex, 1)[0]);
-    }
-    else {
-      cell.currentColor = color_.color;
-      cell.draw(CELLSIZE);
-    }
-  }
-}
-
-function checkFinished() {
-  if (openCells.length == 0) {
-    drawnCells.sort(function (a, b) {
-      if (a.drawnTile > b.drawnTile) {
-        return 1;
-      }
-      else {
-        return -1;
-      }
-    });
-    return true;
-  }
-  return false;
 }
 
 function createToolbox() {
@@ -134,25 +80,28 @@ function createToolbox() {
 
   //---------
   let black = createGraphics(tools.iconSize, tools.iconSize);
-  black.fill(0);
-  black.rect(0, 0, tools.iconSize - 2, tools.iconSize - 2);
-
+  black.background(0);
   //---------
 
   tG.addTools(new Tool(black, function () {
-    if (CELLSIZE < min(height, width)) {
-      background(255);
-      CELLSIZE++;
-      drawGame();
+    if (game.cellSize < min(height, width)) {
+      //background(255);
+      game.cellSize++;
+      drawIt(true, true);
     }
   }));
 
   tG.addTools(new Tool(black, function () {
-    if (CELLSIZE > 1) {
-      background(255);
-      CELLSIZE--;
-      drawGame();
+    if (game.cellSize > 1) {
+      //background(255);
+      game.cellSize--;
+      drawIt(true, true);
     }
+  }));
+
+  tG.addTools(new Tool(black, function () {
+    console.log("Place Moving Func here");
+    drawIt(true, true);
   }));
 
 
@@ -171,49 +120,14 @@ function createToolbox() {
     graph.textAlign(CENTER, CENTER);
     graph.textSize(tools.iconSize / 3);
     graph.text(c.text, tools.iconSize / 4, tools.iconSize / 4);
-    cS.addTools(new Tool(graph, switchColor, c));
+    cS.addTools(new Tool(graph, function (color) {
+      game.changeColor(color);
+      drawIt(true, false)
+    }, c));
   }
 
   tools.addGroup(tG);
   tools.addGroup(cS);
-}
-
-function drawGame() {
-
-  let gameArea = min(height, width);
-
-  for (let c of openCells) {
-    if (c.cellColor === color_ && !c.filled) {
-      c.highlight(CELLSIZE);
-    }
-    else {
-      c.draw(CELLSIZE);
-    }
-  }
-
-  for (let c of drawnCells) {
-    c.draw(CELLSIZE);
-  }
-
-  let horiz = height > width;
-
-  fill(255);
-  rect(0, gameArea, width, height);
-  rect(gameArea, 0, width, height);
-
-  tools.draw(
-    horiz ? 0 : gameArea,
-    horiz ? gameArea : 0,
-    horiz);
-}
-
-function drawAuto() {
-  drawnCells[drawnTile].draw(CELLSIZE);
-  drawnTile++;
-  if (drawnTile == drawnCells.length) {
-    background(150);
-    drawnTile = 0;
-  }
 }
 
 function pre_populate(tmpImage) {
@@ -238,7 +152,7 @@ function pre_populate(tmpImage) {
     );
 
     if (colorIndex == -1) {
-      tmpCellColors.push(new CellColor(pixelColor, count+=1));
+      tmpCellColors.push(new CellColor(pixelColor, count += 1));
       tmpCells.push(new Cell(x, y, tmpCellColors[tmpCellColors.length - 1]));
     }
     else {
@@ -253,35 +167,5 @@ function pre_populate(tmpImage) {
   }
 
   colors = tmpCellColors;
-  openCells = tmpCells;
-
-  //return cellColors;
-}
-/* 
-function pre_populateCells(tmpImage) {
-  let tmpCells = [];
-
-  let x = 0;
-  let y = 0;
-
-  for (let i = 0; i < tmpImage.pixels.length; i += 4) {
-    let r = tmpImage.pixels[i];
-    let g = tmpImage.pixels[i + 1];
-    let b = tmpImage.pixels[i + 2];
-    let alpha = tmpImage.pixels[i + 3];
-
-    let pixelColor = color(r, g, b, alpha);
-    let colorIndex = colors.indexOf(colors.find(o => o.color.toString() === pixelColor.toString()));
-
-    tmpCells.push(new Cell(x, y, colors[colorIndex]));
-
-    x++;
-
-    if (x == img.width) {
-      x = 0;
-      y++;
-    }
-  }
-
   return tmpCells;
-} */
+}
