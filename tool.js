@@ -10,8 +10,8 @@ class Tool {
         this.func(this.param);
     }
 
-    draw(x, y) {
-        image(this.icon, x, y);
+    draw(x, y, size) {
+        image(this.icon, x, y, size, size);
         this.x = x;
         this.y = y;
     }
@@ -40,7 +40,7 @@ class ToolGroup {
 
         fill(255);
         noStroke();
-        
+
         if (isVertical) {
             x -= this.offSet;
             rect(0, y, width, iconSize);
@@ -52,7 +52,7 @@ class ToolGroup {
 
         for (let t of this.tools) {
 
-            t.draw(x, y);
+            t.draw(x, y, iconSize);
 
             if (isVertical) {
                 x += iconSize;

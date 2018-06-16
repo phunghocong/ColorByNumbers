@@ -1,11 +1,42 @@
 const SPRITESIZE = 16;
 let sheet;
-let img;
-
-let colors = []
 
 let tools;
 let game;
+
+let moveOrigin;
+
+
+//Control Game
+const hold_toggle_timer = .5;
+
+let hold_toggle = 0;
+let move = false;
+
+function draw() {
+  if (mouseIsPressed) {
+    hold_toggle++;
+  }
+
+  if (hold_toggle / frameRate() >= hold_toggle_timer &&
+    !move) {
+    move = true;
+    window.navigator.vibrate(200);
+    moveOrigin = createVector(mouseX, mouseY);
+    console.log("move");
+  }
+}
+
+function mouseReleased() {
+  hold_toggle = 0;
+
+  if (move) {
+    game.move(mouseX - moveOrigin.x, mouseY - moveOrigin.y);
+    drawIt(true, true);
+  }
+
+  move = false;
+}
 
 function preload() {
   sheet = loadImage("assets/sheet.png")
@@ -19,7 +50,7 @@ function setup() {
   let row = floor(random(0, rows));
 
   //Get Random image from SpriteSheet
-  img = sheet.get(col * SPRITESIZE, row * SPRITESIZE, SPRITESIZE, SPRITESIZE);
+  let img = sheet.get(col * SPRITESIZE, row * SPRITESIZE, SPRITESIZE, SPRITESIZE);
 
   //Create the Canvas
   createCanvas(windowWidth - 5, windowHeight - 5);
@@ -52,6 +83,7 @@ function drawIt(drawG, drawT) {
 
 function mouseDragged() {
 
+  hold_toggle = 0;
   let gameArea = min(height, width);
   if (mouseY > gameArea || mouseX > gameArea) {
     //Do not draw
@@ -83,7 +115,7 @@ function createToolbox() {
   black.background(0);
   //---------
 
-  tG.addTools(new Tool(black, function () {
+  tG.addTools(new Tool(loadImage("assets/magGlassesPlus.png"), function () {
     if (game.cellSize < min(height, width)) {
       //background(255);
       game.cellSize++;
@@ -91,7 +123,7 @@ function createToolbox() {
     }
   }));
 
-  tG.addTools(new Tool(black, function () {
+  tG.addTools(new Tool(loadImage("assets/magGlassesMin.png"), function () {
     if (game.cellSize > 1) {
       //background(255);
       game.cellSize--;
