@@ -22,7 +22,7 @@ class Cell {
         }
         else {
             stroke(0);
-            
+
             if (this.highlight) {
                 fill(180);
             }
@@ -32,13 +32,24 @@ class Cell {
             else {
                 fill(150);
             }
-            
+
             rect(this.x, this.y, size, size);
             fill(0);
             textAlign(CENTER, CENTER);
             textSize(size / 4);
             text(this.cellColor.text, this.x, this.y, size, size);
         }
+    }
+
+    isClicked(x, y, size) {
+        if (this.x <= x &&
+            this.x + size >= x &&
+            this.y <= y &&
+            this.y + size >= y) {
+
+            return true;
+        }
+        return false;
     }
 }
 

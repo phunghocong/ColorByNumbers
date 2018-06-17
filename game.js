@@ -43,7 +43,7 @@ class Game {
                 left > lengthX ||
                 down < 0 ||
                 up > lengthY) {
-                console.log("Skip", this.cells[i]);
+                //console.log("Skip", this.cells[i]);
             }
             else {
                 this.cells[i].draw(this.cellSize);
@@ -54,11 +54,6 @@ class Game {
     move(x, y) {
         this.drawingOffSetX += x;
         this.drawingOffSetY += y;
-
-        for (let c of this.cells) {
-            c.x -= x;
-            c.y -= y;
-        }
     }
 
     checkFinished() {
@@ -84,31 +79,27 @@ class Game {
         }
     }
 
-    fillOut(x, y, sizeOfCell) {
-
-    }
-
     action(x, y, action) {
 
         switch (action) {
             case "drawCell":
                 let x_ = floor(x / this.cellSize);
                 let y_ = floor(y / this.cellSize);
-                let cellIndex = this.cells.indexOf(
-                    this.cells.find(
-                        c =>
-                            c.col == x_ &&
-                            c.row == y_));
-                if (cellIndex >= 0) {
 
-                    let cell = this.cells[cellIndex];
+                let cell;
+                for (let c of this.cells) {
+                    if (c.isClicked(x, y, this.size)) {
+                        cell = c;
+                    }
+                }
+                if (cell) {
                     if (cell.cellColor == this.currentColor) {
                         cell.drawn = true;
                     }
                     if (!cell.drawn) {
-                        this.cells[cellIndex].currentColor = this.currentColor.color;
+                        cell.currentColor = this.currentColor.color;
                     }
-                    this.cells[cellIndex].draw(this.cellSize);
+                    cell.draw(this.cellSize);
                     this.count = this.drawingOrder++;
                     return true;
                 }

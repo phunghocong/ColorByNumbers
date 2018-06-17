@@ -8,38 +8,53 @@ let moveOrigin;
 
 
 //Control Game
-const hold_toggle_timer = .5;
+const hold_toggle_timer = .3;
 
 let hold_toggle = 0;
 let move = false;
 
-function draw() {
-  if (mouseIsPressed) {
-    hold_toggle++;
-  }
-
-  if (hold_toggle / frameRate() >= hold_toggle_timer &&
-    !move) {
-    move = true;
-    window.navigator.vibrate(200);
-    moveOrigin = createVector(mouseX, mouseY);
-    console.log("move");
-  }
-}
-
-function mouseReleased() {
-  hold_toggle = 0;
-
-  if (move) {
-    game.move(mouseX - moveOrigin.x, mouseY - moveOrigin.y);
-    drawIt(true, true);
-  }
-
-  move = false;
-}
-
 function preload() {
   sheet = loadImage("assets/sheet.png")
+}
+
+function pre_populate(tmpImage) {
+  let tmpCellColors = [];
+  let tmpCells = [];
+
+  let count = 0;
+  let x = 0;
+  let y = 0;
+
+  tmpImage.loadPixels();
+
+  for (let i = 0; i < tmpImage.pixels.length; i += 4) {
+    let r = tmpImage.pixels[i];
+    let g = tmpImage.pixels[i + 1];
+    let b = tmpImage.pixels[i + 2];
+    let alpha = tmpImage.pixels[i + 3];
+
+    let pixelColor = color(r, g, b, alpha);
+    let colorIndex = tmpCellColors.indexOf(tmpCellColors.find(
+      c => c.color.toString() == pixelColor.toString())
+    );
+
+    if (colorIndex == -1) {
+      tmpCellColors.push(new CellColor(pixelColor, count += 1));
+      tmpCells.push(new Cell(x, y, tmpCellColors[tmpCellColors.length - 1]));
+    }
+    else {
+      tmpCells.push(new Cell(x, y, tmpCellColors[colorIndex]));
+    }
+
+    x++;
+    if (x == tmpImage.width) {
+      x = 0;
+      y++;
+    }
+  }
+
+  colors = tmpCellColors;
+  return tmpCells;
 }
 
 function setup() {
@@ -57,13 +72,27 @@ function setup() {
 
   //Initate game and tools
   game = new Game(pre_populate(img), img.height, img.width);
-  tools = new ToolBox(30);
+  tools = new ToolBox(64);
   createToolbox();
 
   //Draw the game
   drawIt(true, true);
 
   frameRate(60);
+}
+
+function draw() {
+  if (mouseIsPressed) {
+    hold_toggle++;
+  }
+
+  if (hold_toggle / frameRate() >= hold_toggle_timer &&
+    !move) {
+    move = true;
+    window.navigator.vibrate(200);
+    moveOrigin = createVector(mouseX, mouseY);
+    console.log("move");
+  }
 }
 
 function drawIt(drawG, drawT) {
@@ -81,6 +110,17 @@ function drawIt(drawG, drawT) {
   }
 }
 
+function mouseReleased() {
+  hold_toggle = 0;
+
+  if (move) {
+    game.move(mouseX - moveOrigin.x, mouseY - moveOrigin.y);
+    drawIt(true, true);
+  }
+
+  move = false;
+}
+
 function mouseDragged() {
 
   hold_toggle = 0;
@@ -92,6 +132,9 @@ function mouseDragged() {
   else {
     game.action(mouseX, mouseY, "drawCell");
   }
+
+  //prevent default
+  return false;
 }
 
 function mousePressed() {
@@ -104,6 +147,9 @@ function mousePressed() {
   else {
     mouseDragged();
   }
+
+  //prevent default
+  return false;
 }
 
 function createToolbox() {
@@ -160,44 +206,4 @@ function createToolbox() {
 
   tools.addGroup(tG);
   tools.addGroup(cS);
-}
-
-function pre_populate(tmpImage) {
-  let tmpCellColors = [];
-  let tmpCells = [];
-
-  let count = 0;
-  let x = 0;
-  let y = 0;
-
-  tmpImage.loadPixels();
-
-  for (let i = 0; i < tmpImage.pixels.length; i += 4) {
-    let r = tmpImage.pixels[i];
-    let g = tmpImage.pixels[i + 1];
-    let b = tmpImage.pixels[i + 2];
-    let alpha = tmpImage.pixels[i + 3];
-
-    let pixelColor = color(r, g, b, alpha);
-    let colorIndex = tmpCellColors.indexOf(tmpCellColors.find(
-      c => c.color.toString() == pixelColor.toString())
-    );
-
-    if (colorIndex == -1) {
-      tmpCellColors.push(new CellColor(pixelColor, count += 1));
-      tmpCells.push(new Cell(x, y, tmpCellColors[tmpCellColors.length - 1]));
-    }
-    else {
-      tmpCells.push(new Cell(x, y, tmpCellColors[colorIndex]));
-    }
-
-    x++;
-    if (x == tmpImage.width) {
-      x = 0;
-      y++;
-    }
-  }
-
-  colors = tmpCellColors;
-  return tmpCells;
 }
