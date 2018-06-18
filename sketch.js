@@ -190,14 +190,14 @@ function createToolbox() {
     graph.fill(c.color);
     graph.strokeWeight(1);
     graph.ellipseMode(CORNERS);
-    graph.ellipse(0, 0, tools.iconSize / 2);
+    graph.ellipse(0, 0, tools.iconSize);
 
     graph.strokeWeight(3);
     graph.fill(255);
     graph.stroke(0);
     graph.textAlign(CENTER, CENTER);
-    graph.textSize(tools.iconSize / 3);
-    graph.text(c.text, tools.iconSize / 4, tools.iconSize / 4);
+    graph.textSize(tools.iconSize / 1.5);
+    graph.text(c.text, tools.iconSize / 2, tools.iconSize / 2);
     cS.addTools(new Tool(graph, function (color) {
       game.changeColor(color);
       drawIt(true, false)
