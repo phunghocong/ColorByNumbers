@@ -106,9 +106,6 @@ class Game {
                 break;
 
             case "move":
-                this.drawingOffSetX += x;
-                this.drawingOffSetY += y;
-                this.draw(drawingLength);
                 break;
         }
 

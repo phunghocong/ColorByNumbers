@@ -14,7 +14,7 @@ let hold_toggle = 0;
 let move = false;
 
 function preload() {
-  sheet = loadImage("assets/sheet.png")
+  sheet = loadImage("assets/sheet.png");
 }
 
 function pre_populate(tmpImage) {
@@ -93,31 +93,16 @@ function draw() {
     moveOrigin = createVector(mouseX, mouseY);
     console.log("move");
   }
-}
 
-function drawIt(drawG, drawT) {
-  let gameArea = min(width, height);
-  let horiz = height > width;
-
-  if (drawG) {
-    game.draw(gameArea);
-  }
-
-  if (drawT) {
-    tools.draw(horiz ? 0 : gameArea,
-      horiz ? gameArea : 0,
-      horiz);
+  if (move) {
+    game.move(mouseX - moveOrigin.x, mouseY - moveOrigin.y);
+    moveOrigin = createVector(mouseX, mouseY);
+    drawIt(true, true);
   }
 }
 
 function mouseReleased() {
   hold_toggle = 0;
-
-  if (move) {
-    game.move(mouseX - moveOrigin.x, mouseY - moveOrigin.y);
-    drawIt(true, true);
-  }
-
   move = false;
 }
 
@@ -130,7 +115,12 @@ function mouseDragged() {
     return;
   }
   else {
-    game.action(mouseX, mouseY, "drawCell");
+    //Execute Game action
+
+    let ac = ""
+    if (move) { ac = "move"; }
+    else { ac = "drawCell"; }
+    game.action(mouseX, mouseY, ac);
   }
 
   //prevent default
@@ -150,6 +140,21 @@ function mousePressed() {
 
   //prevent default
   return false;
+}
+
+function drawIt(drawG, drawT) {
+  let gameArea = min(width, height);
+  let horiz = height > width;
+
+  if (drawG) {
+    game.draw(gameArea);
+  }
+
+  if (drawT) {
+    tools.draw(horiz ? 0 : gameArea,
+      horiz ? gameArea : 0,
+      horiz);
+  }
 }
 
 function createToolbox() {
