@@ -6,9 +6,8 @@ let game;
 
 let moveOrigin;
 
-
 //Control Game
-const hold_toggle_timer = .3;
+const hold_toggle_timer = 0.3;
 
 let hold_toggle = 0;
 let move = false;
@@ -34,15 +33,14 @@ function pre_populate(tmpImage) {
     let alpha = tmpImage.pixels[i + 3];
 
     let pixelColor = color(r, g, b, alpha);
-    let colorIndex = tmpCellColors.indexOf(tmpCellColors.find(
-      c => c.color.toString() == pixelColor.toString())
+    let colorIndex = tmpCellColors.indexOf(
+      tmpCellColors.find((c) => c.color.toString() == pixelColor.toString())
     );
 
     if (colorIndex == -1) {
-      tmpCellColors.push(new CellColor(pixelColor, count += 1));
+      tmpCellColors.push(new CellColor(pixelColor, (count += 1)));
       tmpCells.push(new Cell(x, y, tmpCellColors[tmpCellColors.length - 1]));
-    }
-    else {
+    } else {
       tmpCells.push(new Cell(x, y, tmpCellColors[colorIndex]));
     }
 
@@ -58,17 +56,21 @@ function pre_populate(tmpImage) {
 }
 
 function setup() {
-
   let rows = sheet.width / SPRITESIZE;
   let cols = sheet.height / SPRITESIZE;
   let col = floor(random(0, cols));
   let row = floor(random(0, rows));
 
   //Get Random image from SpriteSheet
-  let img = sheet.get(col * SPRITESIZE, row * SPRITESIZE, SPRITESIZE, SPRITESIZE);
+  let img = sheet.get(
+    col * SPRITESIZE,
+    row * SPRITESIZE,
+    SPRITESIZE,
+    SPRITESIZE
+  );
 
   //Create the Canvas
-  createCanvas(windowWidth - 5, windowHeight - 5);
+  createCanvas(windowWidth, windowHeight);
 
   //Initate game and tools
   game = new Game(pre_populate(img), img.height, img.width);
@@ -86,8 +88,7 @@ function draw() {
     hold_toggle++;
   }
 
-  if (hold_toggle / frameRate() >= hold_toggle_timer &&
-    !move) {
+  if (hold_toggle / frameRate() >= hold_toggle_timer && !move) {
     move = true;
     window.navigator.vibrate(200);
     moveOrigin = createVector(mouseX, mouseY);
@@ -99,6 +100,17 @@ function draw() {
     moveOrigin = createVector(mouseX, mouseY);
     drawIt(true, true);
   }
+
+  switch (game.sceneNum) {
+    case 0:
+      // console.log("gang");
+      break;
+    case 1:
+      console.log("sss");
+      createCanvas(windowWidth, windowHeight);
+
+      break;
+  }
 }
 
 function mouseReleased() {
@@ -107,24 +119,28 @@ function mouseReleased() {
 }
 
 function mouseDragged() {
-
   hold_toggle = 0;
   let gameArea = min(height, width);
   if (mouseY > gameArea || mouseX > gameArea) {
     //Do not draw
     return;
-  }
-  else {
+  } else {
     //Execute Game action
 
-    let ac = ""
-    if (move) { ac = "move"; }
-    else { ac = "drawCell"; }
+    let ac = "";
+    if (move) {
+      ac = "move";
+    } else {
+      ac = "drawCell";
+    }
     game.action(mouseX, mouseY, ac);
   }
 
   //prevent default
   return false;
+}
+function mouseClicked() {
+  console.log(game.count1);
 }
 
 function mousePressed() {
@@ -133,8 +149,7 @@ function mousePressed() {
   if (mouseY > gameArea || mouseX > gameArea) {
     //Do not draw
     tools.findAndExecute(mouseX, mouseY);
-  }
-  else {
+  } else {
     mouseDragged();
   }
 
@@ -151,14 +166,11 @@ function drawIt(drawG, drawT) {
   }
 
   if (drawT) {
-    tools.draw(horiz ? 0 : gameArea,
-      horiz ? gameArea : 0,
-      horiz);
+    tools.draw(horiz ? 0 : gameArea, horiz ? gameArea : 0, horiz);
   }
 }
 
 function createToolbox() {
-
   let tG = new ToolGroup("tools");
 
   //---------
@@ -166,27 +178,32 @@ function createToolbox() {
   black.background(0);
   //---------
 
-  tG.addTools(new Tool(loadImage("assets/magGlassesPlus.png"), function () {
-    if (game.cellSize < min(height, width)) {
-      //background(255);
-      game.cellSize++;
-      drawIt(true, true);
-    }
-  }));
+  tG.addTools(
+    new Tool(loadImage("assets/magGlassesPlus.png"), function () {
+      if (game.cellSize < min(height, width)) {
+        //background(255);
+        game.cellSize++;
+        drawIt(true, true);
+      }
+    })
+  );
 
-  tG.addTools(new Tool(loadImage("assets/magGlassesMin.png"), function () {
-    if (game.cellSize > 1) {
-      //background(255);
-      game.cellSize--;
-      drawIt(true, true);
-    }
-  }));
+  tG.addTools(
+    new Tool(loadImage("assets/magGlassesMin.png"), function () {
+      if (game.cellSize > 1) {
+        //background(255);
+        game.cellSize--;
+        drawIt(true, true);
+      }
+    })
+  );
 
-  tG.addTools(new Tool(black, function () {
-    console.log("Place Moving Func here");
-    drawIt(true, true);
-  }));
-
+  // tG.addTools(
+  //   new Tool(black, function () {
+  //     console.log("Place Moving Func here");
+  //     drawIt(true, true);
+  //   })
+  // );
 
   let cS = new ToolGroup("colors");
 
@@ -203,10 +220,16 @@ function createToolbox() {
     graph.textAlign(CENTER, CENTER);
     graph.textSize(tools.iconSize / 1.5);
     graph.text(c.text, tools.iconSize / 2, tools.iconSize / 2);
-    cS.addTools(new Tool(graph, function (color) {
-      game.changeColor(color);
-      drawIt(true, false)
-    }, c));
+    cS.addTools(
+      new Tool(
+        graph,
+        function (color) {
+          game.changeColor(color);
+          drawIt(true, false);
+        },
+        c
+      )
+    );
   }
 
   tools.addGroup(tG);
