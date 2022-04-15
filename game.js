@@ -54,9 +54,9 @@ class Game {
   }
 
   checkFinished() {
-    if (this.count1 == 256) {
-      console.log("Check finished");
+    if (this.count1 === 256) {
       this.sceneNum = 1;
+      console.log("Check finished");
     }
   }
 
@@ -96,11 +96,12 @@ class Game {
             this.count1++;
             // console.error("Counbt: " + this.count1);
           }
-          this.checkFinished();
+          // this.checkFinished();
           cell.draw(this.cellSize);
           this.count = this.drawingOrder++;
           return true;
         }
+
         break;
 
       case "move":

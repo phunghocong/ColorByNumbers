@@ -16,27 +16,27 @@ class Cell {
   draw(size) {
     if (this.drawn) {
       noStroke();
-      fill(this.cellColor.color);
+      fill(this.cell[i].color);
       rect(this.x, this.y, size, size);
       this.isDrawn = true;
     } else {
       this.isDrawn = false;
       stroke(0);
-
-      if (this.highlight) {
-        fill(180);
-      } else if (this.currentColor) {
-        fill(this.currentColor);
-      } else {
-        fill(150);
-      }
-
-      rect(this.x, this.y, size, size);
-      fill(0);
-      textAlign(CENTER, CENTER);
-      textSize(size / 4);
-      text(this.cellColor.text, this.x, this.y, size, size);
     }
+
+    if (this.highlight) {
+      fill(180);
+    } else if (this.currentColor) {
+      fill(this.currentColor);
+    } else {
+      fill(150);
+    }
+
+    rect(this.x, this.y, size, size);
+    fill(0);
+    textAlign(CENTER, CENTER);
+    textSize(size / 4);
+    text(this.cellColor.text, this.x, this.y, size, size);
   }
 
   isClicked(x, y, size) {

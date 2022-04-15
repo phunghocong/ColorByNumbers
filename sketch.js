@@ -1,10 +1,13 @@
-const SPRITESIZE = 16;
+const SPRITESIZE = 32;
 let sheet;
 
 let tools;
 let game;
 
 let moveOrigin;
+let cas;
+
+let logo;
 
 //Control Game
 const hold_toggle_timer = 0.3;
@@ -13,7 +16,9 @@ let hold_toggle = 0;
 let move = false;
 
 function preload() {
-  sheet = loadImage("assets/sheet.png");
+  sheet = loadImage("assets/cute_bug_1.png");
+  logo = loadImage("assets/logo.png");
+  bg = loadImage("assets/bg.png");
 }
 
 function pre_populate(tmpImage) {
@@ -55,6 +60,10 @@ function pre_populate(tmpImage) {
   return tmpCells;
 }
 
+function windowResize() {
+  resizeCanvas(windowWidth, windowHeight);
+}
+
 function setup() {
   let rows = sheet.width / SPRITESIZE;
   let cols = sheet.height / SPRITESIZE;
@@ -70,8 +79,8 @@ function setup() {
   );
 
   //Create the Canvas
-  createCanvas(windowWidth, windowHeight);
-
+  cas = createCanvas(windowWidth, windowHeight);
+  // cas.style("z-index", 1);
   //Initate game and tools
   game = new Game(pre_populate(img), img.height, img.width);
   tools = new ToolBox(64);
@@ -84,6 +93,9 @@ function setup() {
 }
 
 function draw() {
+  // image(bg, 0, 0, windowHeight, windowHeight);
+  // background(175);
+
   if (mouseIsPressed) {
     hold_toggle++;
   }
@@ -92,7 +104,7 @@ function draw() {
     move = true;
     window.navigator.vibrate(200);
     moveOrigin = createVector(mouseX, mouseY);
-    console.log("move");
+    // console.log("move");
   }
 
   if (move) {
@@ -100,14 +112,14 @@ function draw() {
     moveOrigin = createVector(mouseX, mouseY);
     drawIt(true, true);
   }
-
+  image(logo, 1200, 20, 600, 400);
+  // noLoop();
   switch (game.sceneNum) {
     case 0:
-      // console.log("gang");
       break;
     case 1:
-      console.log("sss");
       createCanvas(windowWidth, windowHeight);
+      image(logo, 1200, 20, 600, 400);
 
       break;
   }
@@ -140,7 +152,7 @@ function mouseDragged() {
   return false;
 }
 function mouseClicked() {
-  console.log(game.count1);
+  // console.log(game.count1);
 }
 
 function mousePressed() {
